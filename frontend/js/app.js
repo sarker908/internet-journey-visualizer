@@ -1,6 +1,8 @@
 const API = "";
 const $ = (id) => document.getElementById(id);
 const state = { busy: false, dns: null, ping: null, trace: null };
+let routeMap = null;
+let routeLayer = null;
 
 function toast(message) {
   const node = $("toast");
@@ -16,6 +18,13 @@ async function api(path, target) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ target })
   });
+  const data = await response.json();
+  if (!response.ok || !data.success) throw new Error(data.error || "The request failed.");
+  return data;
+}
+
+async function apiPost(path, payload) {
+  const response = await fetch(API + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
   const data = await response.json();
   if (!response.ok || !data.success) throw new Error(data.error || "The request failed.");
   return data;
@@ -53,6 +62,44 @@ function renderHops(data) {
   }).join("");
 }
 
+function renderMap(locations) {
+  const mapNode = $("map");
+  if (!window.L) { mapNode.innerHTML = '<div class="map-placeholder"><b>Map library unavailable</b><small>Check your internet connection and reload.</small></div>'; return; }
+  if (!routeMap) {
+    mapNode.innerHTML = "";
+    routeMap = L.map(mapNode, { scrollWheelZoom: false }).setView([20, 0], 2);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 18, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>' }).addTo(routeMap);
+    routeLayer = L.layerGroup().addTo(routeMap);
+  }
+  routeLayer.clearLayers();
+  const points = (locations || []).filter(item => item.available && Number.isFinite(item.latitude) && Number.isFinite(item.longitude));
+  if (!points.length) {
+    routeMap.setView([20, 0], 2);
+    $("map-note").textContent = "No responding hop had an available approximate location. The hop list still contains the traceroute results.";
+    setTimeout(() => routeMap.invalidateSize(), 100);
+    return;
+  }
+  const coordinates = points.map(item => [item.latitude, item.longitude]);
+  points.forEach((item, index) => {
+    const marker = L.circleMarker(coordinates[index], { radius: 7, color: "#071522", weight: 2, fillColor: "#59d7c8", fillOpacity: 0.95 }).addTo(routeLayer);
+    const popup = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = "Hop " + (index + 1) + ": " + item.ip;
+    popup.appendChild(title);
+    const location = document.createElement("div");
+    location.textContent = [item.city, item.region, item.country].filter(Boolean).join(", ") || "Location unavailable";
+    popup.appendChild(location);
+    if (item.isp) { const isp = document.createElement("small"); isp.textContent = item.isp; popup.appendChild(isp); }
+    marker.bindPopup(popup);
+  });
+  if (coordinates.length > 1) {
+    L.polyline(coordinates, { color: "#59d7c8", weight: 3, opacity: 0.8, dashArray: "7 8" }).addTo(routeLayer);
+    routeMap.fitBounds(L.latLngBounds(coordinates), { padding: [28, 28], maxZoom: 6 });
+  } else { routeMap.setView(coordinates[0], 4); }
+  $("map-note").textContent = points.length + " approximate IP location(s) shown. The dotted line connects known locations and is not the exact physical cable path.";
+  setTimeout(() => routeMap.invalidateSize(), 100);
+}
+
 async function startJourney() {
   if (state.busy) return;
   const target = $("target-input").value.trim();
@@ -88,6 +135,17 @@ async function startJourney() {
       state.trace = results[1].value;
       outputs.push("TRACEROUTE RESULTS\n" + state.trace.raw_output);
       renderHops(state.trace);
+      const hopIps = [...new Set(state.trace.hops.filter(hop => hop.ip).map(hop => hop.ip))];
+      if (hopIps.length) {
+        try {
+          const geo = await apiPost("/api/geolocate", { ips: hopIps });
+          renderMap(geo.locations);
+          outputs.push("APPROXIMATE HOP LOCATIONS\n" + JSON.stringify(geo, null, 2));
+        } catch (geoError) {
+          renderMap([]);
+          outputs.push("GEOLOCATION NOTE\n" + geoError.message);
+        }
+      } else { renderMap([]); }
       $("route-summary").textContent = `${state.trace.hop_count} hop entries returned for ${state.trace.target}. ${state.trace.reached_destination ? "Destination responded." : "Destination response was not confirmed."}`;
     } else {
       outputs.push("TRACEROUTE ERROR\n" + results[1].reason.message);
