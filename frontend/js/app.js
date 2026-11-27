@@ -132,7 +132,7 @@ function replayPacketJourney() {
     current.classList.add("is-active");
     current.querySelector(".journey-step-state").textContent = current.classList.contains("is-timeout") ? "NO REPLY" : "CURRENT HOP";
     progress.style.width = ((index + 1) / steps.length * 100) + "%";
-    status.textContent = "Following hop " + current.dataset.step + " of " + steps.length + (current.classList.contains("is-timeout") ? ": no response was received." : ".");
+    status.textContent = "Following hop " + (Number(current.dataset.step) + 1) + " of " + steps.length + (current.classList.contains("is-timeout") ? ": no response was received." : ".");
     index += 1;
     journeyTimer = setTimeout(advance, 650);
   };
@@ -182,6 +182,8 @@ async function startJourney() {
   const target = $("target-input").value.trim();
   if (!target) return toast("Enter a domain name or public IP address first.");
 
+  stopJourneyReplay();
+  renderPacketJourney(null);
   state.dns = state.ping = state.trace = null;
   renderStats();
   $("route-list").innerHTML = '<div class="empty-state"><div class="empty-symbol">◌</div><b>Resolving destination…</b><span>Contacting DNS and preparing network diagnostics.</span></div>';
