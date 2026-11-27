@@ -84,7 +84,7 @@ function renderMap(locations) {
     const marker = L.circleMarker(coordinates[index], { radius: 7, color: "#071522", weight: 2, fillColor: "#59d7c8", fillOpacity: 0.95 }).addTo(routeLayer);
     const popup = document.createElement("div");
     const title = document.createElement("strong");
-    title.textContent = "Hop " + (index + 1) + ": " + item.ip;
+    title.textContent = "Hop " + (item.hop || (index + 1)) + ": " + item.ip;
     popup.appendChild(title);
     const location = document.createElement("div");
     location.textContent = [item.city, item.region, item.country].filter(Boolean).join(", ") || "Location unavailable";
@@ -139,6 +139,10 @@ async function startJourney() {
       if (hopIps.length) {
         try {
           const geo = await apiPost("/api/geolocate", { ips: hopIps });
+          geo.locations.forEach(location => {
+            const matchingHop = state.trace.hops.find(hop => hop.ip === location.ip);
+            location.hop = matchingHop ? matchingHop.hop : null;
+          });
           renderMap(geo.locations);
           outputs.push("APPROXIMATE HOP LOCATIONS\n" + JSON.stringify(geo, null, 2));
         } catch (geoError) {
