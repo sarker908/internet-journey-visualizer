@@ -72,6 +72,19 @@
         </div>
       </section>
 
+      <section class="content-grid analytics-grid">
+        <article class="panel chart-panel">
+          <div class="panel-heading"><div><div class="eyebrow">LATENCY ANALYSIS</div><h3>Hop response times</h3></div><span class="output-label">MILLISECONDS</span></div>
+          <p class="section-note">Round-trip times reported by traceroute. Missing responses remain gaps, not invented values.</p>
+          <div class="chart-wrap"><canvas id="latency-chart" aria-label="Traceroute hop latency chart"></canvas></div>
+        </article>
+        <article class="panel history-panel">
+          <div class="panel-heading"><div><div class="eyebrow">LOCAL SESSION</div><h3>Recent journeys</h3></div><div class="history-actions"><button id="export-csv" type="button" disabled>CSV ↓</button><button id="export-json" type="button" disabled>JSON ↓</button></div></div>
+          <p class="section-note">Saved in this browser only. History is not uploaded to a server.</p>
+          <div class="history-table-wrap"><table class="history-table"><thead><tr><th>DESTINATION</th><th>AVG RTT</th><th>LOSS</th><th>HOPS</th></tr></thead><tbody id="history-list"><tr><td colspan="4" class="history-empty">No saved journeys yet.</td></tr></tbody></table></div>
+        </article>
+      </section>
+
       <section class="panel diagnostics-panel" id="diagnostics">
         <div class="panel-heading"><div><div class="eyebrow">DEEP INSPECTION</div><h3>Diagnostic output</h3></div><span class="output-label">RAW SYSTEM RESPONSE</span></div>
         <pre id="raw-output">No diagnostic output yet. Start a journey to inspect the system responses.</pre>
@@ -81,6 +94,7 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="/js/app.js"></script>
 </body>
 </html>
