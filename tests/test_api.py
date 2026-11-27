@@ -38,7 +38,7 @@ class InternetJourneyApiTests(unittest.TestCase):
 
     def test_traceroute_parser_handles_ipv4_and_latency(self):
         hops = parse_traceroute_output(
-            "  1    2 ms    3 ms    4 ms    192.0.2.1\\n"
+            "  1    2 ms    3 ms    4 ms    192.0.2.1\n"
             "  2    <1 ms    1 ms    2 ms    198.51.100.2"
         )
         self.assertEqual(len(hops), 2)
@@ -49,7 +49,7 @@ class InternetJourneyApiTests(unittest.TestCase):
 
     def test_traceroute_parser_handles_ipv6_and_timeout(self):
         hops = parse_traceroute_output(
-            "  1  2001:4860:4860::8888  5 ms\\n"
+            "  1  2001:4860:4860::8888  5 ms\n"
             "  2  * * *"
         )
         self.assertEqual(hops[0]["ip"], "2001:4860:4860::8888")
