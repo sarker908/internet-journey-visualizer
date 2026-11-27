@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080d18">
+  <meta name="description" content="Explore real DNS resolution, ping latency and traceroute paths with Internet Journey Visualizer.">
+  <title>Internet Journey Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/"><span class="brand-mark">IJ</span><span>internet<span class="brand-light">journey</span></span></a>
+      <div class="side-label">WORKSPACE</div>
+      <a class="nav-link active" href="#overview"><span>◈</span> Journey explorer</a>
+      <a class="nav-link" href="#route-section"><span>⌁</span> Route topology</a>
+      <a class="nav-link" href="#diagnostics"><span>▥</span> Diagnostics</a>
+      <div class="sidebar-bottom">
+        <div class="system-card"><span class="status-dot"></span><span><b>Local engine</b><small id="engine-status">Checking backend…</small></span></div>
+        <div class="side-foot">COMPUTER NETWORKS PROJECT<br>VERSION 0.1.0</div>
+      </div>
+    </aside>
+
+    <main class="main-content" id="overview">
+      <header class="topbar"><div><div class="eyebrow">NETWORK INTELLIGENCE / OVERVIEW</div><h1>Internet Journey <span>Visualizer</span></h1></div><div class="top-tag"><span class="status-dot"></span> REAL NETWORK DATA</div></header>
+
+      <section class="hero-panel">
+        <div class="hero-copy"><div class="eyebrow">TRACE THE ROUTE. UNDERSTAND THE INTERNET.</div><h2>Where does your data<br>travel?</h2><p>Explore DNS resolution, measure latency and discover the routers between your device and a destination.</p></div>
+        <div class="search-panel">
+          <label for="target-input">DESTINATION HOSTNAME OR PUBLIC IP</label>
+          <div class="search-row"><span class="search-icon">⌕</span><input id="target-input" type="text" placeholder="e.g. example.com" value="example.com" autocomplete="url" spellcheck="false"><button id="start-button">Start journey <span>↗</span></button></div>
+          <div class="search-hint"><span class="hint-dot"></span> Diagnostics run from the computer hosting this application.</div>
+        </div>
+        <div class="hero-orbit orbit-one"></div><div class="hero-orbit orbit-two"></div>
+      </section>
+
+      <section class="stats-grid" aria-label="Network statistics">
+        <article class="stat-card"><div class="stat-top"><span>DESTINATION IP</span><span class="stat-icon">◎</span></div><strong id="stat-ip">—</strong><small id="stat-host">Waiting for a target</small></article>
+        <article class="stat-card"><div class="stat-top"><span>AVERAGE LATENCY</span><span class="stat-icon">◷</span></div><strong id="stat-latency">— <i>ms</i></strong><small>Based on ping responses</small></article>
+        <article class="stat-card"><div class="stat-top"><span>PACKET LOSS</span><span class="stat-icon">⌁</span></div><strong id="stat-loss">— <i>%</i></strong><small>ICMP echo test</small></article>
+        <article class="stat-card"><div class="stat-top"><span>ROUTE HOPS</span><span class="stat-icon">⤳</span></div><strong id="stat-hops">—</strong><small>Responding / detected hops</small></article>
+      </section>
+
+      <section class="content-grid" id="route-section">
+        <article class="panel route-panel">
+          <div class="panel-heading"><div><div class="eyebrow">PATH DISCOVERY</div><h3>Network route</h3></div><span class="live-pill"><span class="status-dot"></span> LIVE TEST</span></div>
+          <div class="route-summary" id="route-summary">Enter a destination and start a journey to discover its route.</div>
+          <div class="route-list" id="route-list"><div class="empty-state"><div class="empty-symbol">⌁</div><b>Your route will appear here</b><span>Each row represents a traceroute hop reported by your network.</span></div></div>
+        </article>
+        <article class="panel map-panel">
+          <div class="panel-heading"><div><div class="eyebrow">GEOGRAPHIC VIEW</div><h3>Route map</h3></div><span class="map-legend"><i></i> Approximate</span></div>
+          <div id="map"><div class="map-placeholder"><span>◎</span><b>Map visualization</b><small>Geographic enrichment is coming in the next milestone.</small></div></div>
+          <div class="map-note">Router locations require public IP geolocation data and may be unavailable or approximate.</div>
+        </article>
+      </section>
+
+      <section class="panel diagnostics-panel" id="diagnostics">
+        <div class="panel-heading"><div><div class="eyebrow">DEEP INSPECTION</div><h3>Diagnostic output</h3></div><span class="output-label">RAW SYSTEM RESPONSE</span></div>
+        <pre id="raw-output">No diagnostic output yet. Start a journey to inspect the system responses.</pre>
+      </section>
+      <footer>INTERNET JOURNEY VISUALIZER <span>Built for learning how the internet works.</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/js/app.js"></script>
+</body>
+</html>
