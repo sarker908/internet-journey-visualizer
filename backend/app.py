@@ -126,6 +126,37 @@ def lookup_ip_location(address: str) -> dict[str, Any]:
     return result
 
 
+def parse_traceroute_output(output: str) -> list[dict[str, Any]]:
+    """Parse hop rows from Windows tracert or Unix traceroute output."""
+    hops: list[dict[str, Any]] = []
+    for line in output.splitlines():
+        match = re.match(r"^\s*(\d+)\s+(.*)$", line)
+        if not match:
+            continue
+        hop_number = int(match.group(1))
+        remainder = match.group(2).strip()
+        hop_ip = None
+        for candidate in re.findall(r"(?<![A-Za-z0-9])[0-9A-Fa-f:.]{3,}(?![A-Za-z0-9])", remainder):
+            candidate = candidate.strip(".,;()[]")
+            try:
+                hop_ip = str(ipaddress.ip_address(candidate))
+                break
+            except ValueError:
+                continue
+        time_values = [
+            float(value)
+            for value in re.findall(r"(?:<\s*)?([0-9]+(?:\.[0-9]+)?)\s*ms", remainder, re.I)
+        ]
+        hops.append({
+            "hop": hop_number,
+            "ip": hop_ip,
+            "rtt_ms": round(sum(time_values) / len(time_values), 2) if time_values else None,
+            "status": "responded" if hop_ip else "timeout",
+            "raw": remainder[:240],
+        })
+    return hops
+
+
 def run_command(command: list[str], timeout: int = 35) -> str:
     completed = subprocess.run(
         command,
@@ -223,26 +254,7 @@ def traceroute():
             }), 501
 
         output = run_command(command, timeout=35)
-        hops = []
-        for line in output.splitlines():
-            match = re.match(r"^\s*(\d+)\s+(.*)$", line)
-            if not match:
-                continue
-            hop_number = int(match.group(1))
-            remainder = match.group(2).strip()
-            ip_match = re.search(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", remainder)
-            hop_ip = ip_match.group(0) if ip_match else None
-            time_values = [
-                float(value)
-                for value in re.findall(r"([0-9]+(?:\.[0-9]+)?)\s*ms", remainder, re.I)
-            ]
-            hops.append({
-                "hop": hop_number,
-                "ip": hop_ip,
-                "rtt_ms": round(sum(time_values) / len(time_values), 2) if time_values else None,
-                "status": "responded" if hop_ip else "timeout",
-                "raw": remainder[:240],
-            })
+        hops = parse_traceroute_output(output)
 
         return jsonify({
             "success": True,
