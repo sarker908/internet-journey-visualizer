@@ -109,14 +109,37 @@ function renderLatencyChart(trace) {
       y:{beginAtZero:true,title:{display:true,text:"RTT (ms)",color:"#8195ad"},ticks:{color:"#8195ad"},grid:{color:"rgba(125,150,180,.1)"}}}}
   });
 }
-function renderMap(locations) {
+function initializeMap() {
   const mapNode = $("map");
-  if (!window.L) { mapNode.innerHTML = '<div class="map-placeholder"><b>Map library unavailable</b><small>Check your connection and reload.</small></div>'; return; }
-  if (!routeMap) {
-    mapNode.innerHTML = ""; routeMap = L.map(mapNode,{scrollWheelZoom:false}).setView([20,0],2);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'}).addTo(routeMap);
-    routeLayer = L.layerGroup().addTo(routeMap);
+  if (!window.L) {
+    mapNode.innerHTML = '<div class="map-placeholder"><b>Map library unavailable</b><small>Leaflet could not load. Check CDN access or browser extensions.</small></div>';
+    $("map-note").textContent = "Map library failed to load. Reload the page or check whether the Leaflet CDN is blocked.";
+    return false;
   }
+  if (routeMap) {
+    setTimeout(() => routeMap.invalidateSize(), 120);
+    return true;
+  }
+  mapNode.innerHTML = "";
+  routeMap = L.map(mapNode, { scrollWheelZoom: false }).setView([23.8, 90.4], 3);
+  const tiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 18,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>'
+  });
+  tiles.on("tileerror", () => {
+    $("map-note").textContent = "Map tiles could not load. Check your internet connection, content blockers, or OpenStreetMap access.";
+  });
+  tiles.on("load", () => {
+    if (!state.trace) $("map-note").textContent = "Base map loaded. Run a journey to display approximate responding router locations.";
+  });
+  tiles.addTo(routeMap);
+  routeLayer = L.layerGroup().addTo(routeMap);
+  setTimeout(() => routeMap.invalidateSize(), 150);
+  return true;
+}
+
+function renderMap(locations) {
+  if (!initializeMap()) return;
   routeLayer.clearLayers();
   const points = (locations||[]).filter(item=>item.available&&Number.isFinite(item.latitude)&&Number.isFinite(item.longitude));
   if (!points.length) {
@@ -216,4 +239,4 @@ $("target-input").addEventListener("keydown",event=>{if(event.key==="Enter")star
 $("export-csv").addEventListener("click",()=>exportHistory("csv"));
 $("export-json").addEventListener("click",()=>exportHistory("json"));
 $("clear-history").addEventListener("click",()=>{if(window.confirm("Clear all journey history saved in this browser?")){localStorage.removeItem(HISTORY_KEY);renderHistory();toast("Browser-local journey history cleared.");}});
-renderHistory();checkBackend();
+renderHistory();initializeMap();checkBackend();
