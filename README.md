@@ -13,7 +13,7 @@ The project combines **real network diagnostics** with an interactive visualizat
 - [x] Ping diagnostics
 - [x] Traceroute diagnostics (Windows and Unix-like systems)
 - [x] Interactive browser dashboard
-- [x] Approximate geolocation enrichment for responding public IPv4/IPv6 hops
+- [x] Approximate geolocation enrichment for responding public IPv4 hops
 - [x] Interactive Leaflet map with route markers and approximate connecting lines
 - [ ] Animated packet/topology visualization
 - [ ] Diagnostic history and export
