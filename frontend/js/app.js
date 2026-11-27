@@ -143,7 +143,7 @@ function readHistory() {
 }
 function renderHistory() {
   const history=readHistory(), body=$("history-list");
-  $("export-csv").disabled=history.length===0; $("export-json").disabled=history.length===0;
+  $("export-csv").disabled=history.length===0; $("export-json").disabled=history.length===0; $("clear-history").disabled=history.length===0;
   if(!history.length){body.innerHTML='<tr><td colspan="4" class="history-empty">No saved journeys yet.</td></tr>';return;}
   body.innerHTML=history.map(item=>'<tr title="'+escapeHTML(new Date(item.timestamp).toLocaleString())+'"><td>'+escapeHTML(item.target)+'</td><td>'+
     (item.avg_ms==null?"—":escapeHTML(item.avg_ms)+" ms")+'</td><td>'+(item.packet_loss_percent==null?"—":escapeHTML(item.packet_loss_percent)+"%")+
@@ -215,4 +215,5 @@ $("start-button").addEventListener("click",startJourney);
 $("target-input").addEventListener("keydown",event=>{if(event.key==="Enter")startJourney();});
 $("export-csv").addEventListener("click",()=>exportHistory("csv"));
 $("export-json").addEventListener("click",()=>exportHistory("json"));
+$("clear-history").addEventListener("click",()=>{if(window.confirm("Clear all journey history saved in this browser?")){localStorage.removeItem(HISTORY_KEY);renderHistory();toast("Browser-local journey history cleared.");}});
 renderHistory();checkBackend();
