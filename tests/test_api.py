@@ -25,10 +25,10 @@ class InternetJourneyApiTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_target("not a domain")
 
-    def test_geolocation_rejects_private_hop_ip(self):
+    def test_geolocation_skips_private_hop_ip(self):
         response = self.client.post("/api/geolocate", json={"ips": ["192.168.1.1"]})
-        self.assertEqual(response.status_code, 400)
-        self.assertFalse(response.get_json()["success"])
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.get_json()["locations"][0]["available"])
 
     def test_geolocation_requires_ip_list(self):
         response = self.client.post("/api/geolocate", json={"ips": []})
