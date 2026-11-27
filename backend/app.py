@@ -241,11 +241,11 @@ def traceroute():
         system = platform.system().lower()
 
         if system == "windows":
-            command = ["tracert", "-d", "-h", "20", "-w", "1000", destination]
+            command = ["tracert", "-d", "-h", "20", "-w", "500", destination]
             executable = "tracert"
         else:
             executable = "traceroute"
-            command = ["traceroute", "-n", "-m", "20", "-w", "1", destination]
+            command = ["traceroute", "-n", "-m", "20", "-q", "1", "-w", "1", destination]
 
         if not shutil.which(executable):
             return jsonify({
@@ -286,19 +286,23 @@ def geolocate_hops():
         return jsonify({"success": False, "error": "A maximum of 20 hop addresses can be enriched at once."}), 400
 
     unique_addresses = []
+    unavailable_addresses = []
     for raw_address in addresses:
         try:
             address = ipaddress.ip_address(str(raw_address))
         except ValueError:
-            return jsonify({"success": False, "error": "Every hop must be a valid public IP address."}), 400
-        if not address.is_global:
-            return jsonify({"success": False, "error": "Only public hop IP addresses can be geolocated."}), 400
+            return jsonify({"success": False, "error": "Every hop must be a valid IP address."}), 400
         canonical = str(address)
+        if not address.is_global:
+            if canonical not in unavailable_addresses:
+                unavailable_addresses.append(canonical)
+            continue
         if canonical not in unique_addresses:
             unique_addresses.append(canonical)
 
     with ThreadPoolExecutor(max_workers=5) as executor:
         locations = list(executor.map(lookup_ip_location, unique_addresses))
+    locations.extend({"ip": address, "available": False} for address in unavailable_addresses)
 
     return jsonify({
         "success": True,
