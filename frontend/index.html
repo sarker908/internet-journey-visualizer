@@ -59,6 +59,19 @@
         </article>
       </section>
 
+      <section class="panel journey-panel" id="packet-journey">
+        <div class="panel-heading">
+          <div><div class="eyebrow">ROUTE REPLAY</div><h3>Packet journey simulation</h3></div>
+          <button class="replay-button" id="replay-button" type="button" disabled>Replay journey ↻</button>
+        </div>
+        <p class="journey-disclaimer">A visual replay of the traceroute results below, not a live packet capture. Each step uses a hop reported by your computer.</p>
+        <div class="journey-progress"><span id="journey-progress-bar"></span></div>
+        <div class="journey-status" id="journey-status" aria-live="polite">Run a traceroute to build the journey.</div>
+        <div class="journey-track" id="journey-track">
+          <div class="journey-empty">Your discovered route will appear here.</div>
+        </div>
+      </section>
+
       <section class="panel diagnostics-panel" id="diagnostics">
         <div class="panel-heading"><div><div class="eyebrow">DEEP INSPECTION</div><h3>Diagnostic output</h3></div><span class="output-label">RAW SYSTEM RESPONSE</span></div>
         <pre id="raw-output">No diagnostic output yet. Start a journey to inspect the system responses.</pre>
