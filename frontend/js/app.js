@@ -62,6 +62,83 @@ function renderHops(data) {
   }).join("");
 }
 
+let journeyTimer = null;
+
+function stopJourneyReplay() {
+  if (journeyTimer) {
+    clearTimeout(journeyTimer);
+    journeyTimer = null;
+  }
+}
+
+function renderPacketJourney(trace) {
+  stopJourneyReplay();
+  const track = $("journey-track");
+  const button = $("replay-button");
+  const progress = $("journey-progress-bar");
+  const status = $("journey-status");
+  const hops = trace?.hops || [];
+  progress.style.width = "0%";
+  if (!hops.length) {
+    track.innerHTML = '<div class="journey-empty">No traceroute hops are available to replay.</div>';
+    status.textContent = "No route data to animate.";
+    button.disabled = true;
+    return;
+  }
+
+  track.innerHTML = hops.map((hop, index) => {
+    const timeout = !hop.ip;
+    const title = timeout ? "No response from this hop" : hop.ip;
+    const detail = timeout ? "Probe timed out" : (hop.rtt_ms == null ? "Responding router" : hop.rtt_ms + " ms response time");
+    return `<div class="journey-step ${timeout ? "is-timeout" : ""}" data-step="${index}">
+      <span class="journey-node">${timeout ? "?" : index + 1}</span>
+      <span class="journey-step-copy"><b>${title}</b><small>HOP ${String(hop.hop).padStart(2, "0")} · ${detail}</small></span>
+      <span class="journey-step-state">${timeout ? "NO REPLY" : "WAITING"}</span>
+    </div>`;
+  }).join("");
+  button.disabled = false;
+  status.textContent = hops.length + " traceroute hop entries ready. Press replay to follow the measured sequence.";
+}
+
+function replayPacketJourney() {
+  stopJourneyReplay();
+  const steps = [...$("journey-track").querySelectorAll(".journey-step")];
+  const button = $("replay-button");
+  const progress = $("journey-progress-bar");
+  const status = $("journey-status");
+  if (!steps.length) return;
+  steps.forEach(step => {
+    step.classList.remove("is-active", "is-complete");
+    const stateLabel = step.querySelector(".journey-step-state");
+    stateLabel.textContent = step.classList.contains("is-timeout") ? "NO REPLY" : "WAITING";
+  });
+  button.disabled = true;
+  let index = 0;
+  const advance = () => {
+    if (index > 0) {
+      const previous = steps[index - 1];
+      previous.classList.remove("is-active");
+      previous.classList.add("is-complete");
+      previous.querySelector(".journey-step-state").textContent = previous.classList.contains("is-timeout") ? "TIMEOUT" : "PASSED";
+    }
+    if (index >= steps.length) {
+      progress.style.width = "100%";
+      status.textContent = "Replay complete. This sequence represents traceroute responses, not a captured application packet.";
+      button.disabled = false;
+      journeyTimer = null;
+      return;
+    }
+    const current = steps[index];
+    current.classList.add("is-active");
+    current.querySelector(".journey-step-state").textContent = current.classList.contains("is-timeout") ? "NO REPLY" : "CURRENT HOP";
+    progress.style.width = ((index + 1) / steps.length * 100) + "%";
+    status.textContent = "Following hop " + current.dataset.step + " of " + steps.length + (current.classList.contains("is-timeout") ? ": no response was received." : ".");
+    index += 1;
+    journeyTimer = setTimeout(advance, 650);
+  };
+  advance();
+}
+
 function renderMap(locations) {
   const mapNode = $("map");
   if (!window.L) { mapNode.innerHTML = '<div class="map-placeholder"><b>Map library unavailable</b><small>Check your internet connection and reload.</small></div>'; return; }
@@ -135,6 +212,7 @@ async function startJourney() {
       state.trace = results[1].value;
       outputs.push("TRACEROUTE RESULTS\n" + state.trace.raw_output);
       renderHops(state.trace);
+      renderPacketJourney(state.trace);
       const hopIps = [...new Set(state.trace.hops.filter(hop => hop.ip).map(hop => hop.ip))];
       if (hopIps.length) {
         try {
@@ -181,6 +259,7 @@ async function checkBackend() {
   }
 }
 
+$("replay-button").addEventListener("click", replayPacketJourney);
 $("start-button").addEventListener("click", startJourney);
 $("target-input").addEventListener("keydown", event => {
   if (event.key === "Enter") startJourney();
