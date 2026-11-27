@@ -8,9 +8,9 @@ The application combines real DNS, ping and traceroute measurements with an inte
 
 - DNS A and AAAA record resolution.
 - Ping measurements: sent/received packets, packet loss, and min/average/max RTT.
-- Traceroute using Windows `tracert` or Linux/macOS `traceroute`.
+- Traceroute using Windows `tracert` or Linux/macOS `traceroute`, with IPv4/IPv6 hop parsing.
 - Hop-by-hop route list with timeout states.
-- Approximate IP geolocation and Leaflet map for responding public IP hops.
+- Approximate IP geolocation and Leaflet map for responding public IP hops (private hops are skipped).
 - Replay animation based on the actual traceroute result.
 - Hop RTT chart with missing values preserved as gaps.
 - Last 20 journeys saved in browser local storage.
