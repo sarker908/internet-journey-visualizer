@@ -6,15 +6,16 @@ The project combines **real network diagnostics** with an interactive visualizat
 
 ## Current status
 
-**Milestone 1: Project foundation and first working diagnostics API**
+**Milestone 2: Interactive route map and IP geolocation**
 
 - [x] Flask application foundation
 - [x] DNS A/AAAA lookup
 - [x] Ping diagnostics
 - [x] Traceroute diagnostics (Windows and Unix-like systems)
 - [x] Interactive browser dashboard
-- [ ] Hop geolocation enrichment
-- [ ] Animated topology and route map
+- [x] Approximate geolocation enrichment for responding public IPv4/IPv6 hops
+- [x] Interactive Leaflet map with route markers and approximate connecting lines
+- [ ] Animated packet/topology visualization
 - [ ] Diagnostic history and export
 
 ## Architecture
@@ -29,6 +30,7 @@ Flask REST API
        +-- DNS resolver (dnspython)
        +-- Ping engine (system ping utility)
        +-- Traceroute engine (tracert / traceroute)
+       +-- IP geolocation lookup (ipwho.is)
        |
        v
 Operating system networking stack
@@ -78,6 +80,7 @@ Open **http://127.0.0.1:5000** in your browser.
 | POST | `/api/dns` | Resolve a domain to A/AAAA records |
 | POST | `/api/ping` | Measure round-trip time and packet loss |
 | POST | `/api/traceroute` | Discover responding network hops |
+| POST | `/api/geolocate` | Get approximate locations for responding public hop IPs |
 
 Example request:
 
@@ -89,7 +92,8 @@ Example request:
 
 - Traceroute depends on router responses. A `*` or timeout means no response was received, not that the router does not exist.
 - Ping and traceroute may be blocked or rate-limited by firewalls.
-- IP geolocation is an estimate, not a physical router location.
+- IP geolocation is an estimate, not a physical router location. It may identify an ISP gateway or network hub, and some IPs have no location result.
+- The route map connects only the hop locations that could be resolved. Its dotted lines are visual guides, not the exact physical cable path. Geolocation uses the external ipwho.is service and therefore requires internet access.
 - The route can differ by direction, time, ISP and network conditions.
 - Browser animations represent measured results; they are not packet captures.
 - The diagnostic API is designed for public destinations. Private, loopback, link-local and reserved IP destinations are rejected.
