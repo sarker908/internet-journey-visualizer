@@ -79,7 +79,7 @@
           <div class="chart-wrap"><canvas id="latency-chart" aria-label="Traceroute hop latency chart"></canvas></div>
         </article>
         <article class="panel history-panel">
-          <div class="panel-heading"><div><div class="eyebrow">LOCAL SESSION</div><h3>Recent journeys</h3></div><div class="history-actions"><button id="export-csv" type="button" disabled>CSV ↓</button><button id="export-json" type="button" disabled>JSON ↓</button></div></div>
+          <div class="panel-heading"><div><div class="eyebrow">LOCAL SESSION</div><h3>Recent journeys</h3></div><div class="history-actions"><button id="export-csv" type="button" disabled>CSV ↓</button><button id="export-json" type="button" disabled>JSON ↓</button><button id="clear-history" type="button" disabled>Clear</button></div></div>
           <p class="section-note">Saved in this browser only. History is not uploaded to a server.</p>
           <div class="history-table-wrap"><table class="history-table"><thead><tr><th>DESTINATION</th><th>AVG RTT</th><th>LOSS</th><th>HOPS</th></tr></thead><tbody id="history-list"><tr><td colspan="4" class="history-empty">No saved journeys yet.</td></tr></tbody></table></div>
         </article>
@@ -88,6 +88,16 @@
       <section class="panel diagnostics-panel" id="diagnostics">
         <div class="panel-heading"><div><div class="eyebrow">DEEP INSPECTION</div><h3>Diagnostic output</h3></div><span class="output-label">RAW SYSTEM RESPONSE</span></div>
         <pre id="raw-output">No diagnostic output yet. Start a journey to inspect the system responses.</pre>
+      </section>
+      <section class="concepts-section">
+        <div class="eyebrow">NETWORKING BASICS</div>
+        <h3>Understand what you are seeing</h3>
+        <div class="concepts-grid">
+          <article><span>01 / DNS</span><b>Domain Name System</b><p>Finds the IP address associated with a domain name, like looking up a contact before calling.</p></article>
+          <article><span>02 / PING</span><b>Round-trip time</b><p>Measures how long an ICMP echo request takes to travel to a destination and return.</p></article>
+          <article><span>03 / TRACEROUTE</span><b>Network hops</b><p>Uses packet TTL or hop limits to reveal routers that respond along the route.</p></article>
+          <article><span>04 / PACKET LOSS</span><b>Missing replies</b><p>The percentage of ping probes that did not receive a reply during this test.</p></article>
+        </div>
       </section>
       <footer>INTERNET JOURNEY VISUALIZER <span>Built for learning how the internet works.</span></footer>
     </main>
