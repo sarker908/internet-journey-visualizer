@@ -25,3 +25,19 @@
 .journey-step.is-timeout .journey-node{border-color:#765d3d;color:#e0b77e;background:#2a2119}
 .journey-empty{padding:28px 10px;text-align:center;color:#8294ac;font-size:10px}
 @media(max-width:650px){.journey-step{grid-template-columns:30px minmax(0,1fr);gap:9px}.journey-step-state{grid-column:2}.replay-button{padding:8px;font-size:9px}}
+
+
+/* Analytics and browser-local journey history */
+.analytics-grid{margin-top:14px;align-items:stretch}
+.section-note{font-size:9px;line-height:1.6;color:#7e91a9;margin:12px 0}
+.chart-wrap{height:220px;position:relative}
+.history-actions{display:flex;gap:6px}
+.history-actions button{border:1px solid #304760;background:#132438;color:#a9c6df;border-radius:6px;padding:7px 9px;font:9px var(--mono);cursor:pointer}
+.history-actions button:disabled{opacity:.35;cursor:not-allowed}
+.history-table-wrap{max-height:225px;overflow:auto}
+.history-table{width:100%;border-collapse:collapse;text-align:left;font-size:9px}
+.history-table th{position:sticky;top:0;background:#101a2a;color:#7288a2;font:8px var(--mono);letter-spacing:.5px;padding:9px 6px;border-bottom:1px solid #2a3b51}
+.history-table td{padding:10px 6px;border-bottom:1px solid #1c2b40;color:#b8c9dc;white-space:nowrap}
+.history-table td:first-child{font-family:var(--mono);color:#d7e7f8;max-width:145px;overflow:hidden;text-overflow:ellipsis}
+.history-empty{text-align:center;color:#71849b!important;padding:25px!important}
+@media(max-width:650px){.analytics-grid{grid-template-columns:1fr}.chart-wrap{height:190px}.history-actions button{padding:7px}}
