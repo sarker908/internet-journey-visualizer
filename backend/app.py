@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import ipaddress
+import json
 import platform
 import re
 import shutil
 import socket
 import subprocess
+import urllib.error
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 import dns.resolver
@@ -14,6 +18,8 @@ from flask_cors import CORS
 
 app = Flask(__name__, static_folder="../frontend", static_url_path="")
 CORS(app)
+
+GEOLOCATION_CACHE: dict[str, dict[str, Any]] = {}
 
 DOMAIN_RE = re.compile(r"^(?=.{1,253}$)(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)(?:\.(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?))*\.?$")
 
@@ -79,6 +85,44 @@ def resolve_target(raw: Any) -> tuple[str, list[dict[str, str]]]:
         # Prefer IPv4 for broad traceroute compatibility.
         selected = next((r["address"] for r in records if r["type"] == "A"), records[0]["address"])
         return selected, records
+
+
+def lookup_ip_location(address: str) -> dict[str, Any]:
+    """Return an approximate public-IP location using ipwho.is."""
+    if address in GEOLOCATION_CACHE:
+        return GEOLOCATION_CACHE[address]
+
+    url = f"https://ipwho.is/{address}"
+    req = urllib.request.Request(url, headers={"User-Agent": "InternetJourneyVisualizer/0.2"})
+    try:
+        with urllib.request.urlopen(req, timeout=6) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        if not payload.get("success"):
+            result = {"ip": address, "available": False}
+        else:
+            latitude = payload.get("latitude")
+            longitude = payload.get("longitude")
+            valid_coordinates = (
+                isinstance(latitude, (int, float))
+                and isinstance(longitude, (int, float))
+                and -90 <= latitude <= 90
+                and -180 <= longitude <= 180
+            )
+            result = {
+                "ip": address,
+                "available": bool(valid_coordinates),
+                "latitude": latitude if valid_coordinates else None,
+                "longitude": longitude if valid_coordinates else None,
+                "city": payload.get("city"),
+                "region": payload.get("region"),
+                "country": payload.get("country"),
+                "isp": (payload.get("connection") or {}).get("isp"),
+            }
+    except (urllib.error.URLError, TimeoutError, ValueError, json.JSONDecodeError):
+        result = {"ip": address, "available": False}
+
+    GEOLOCATION_CACHE[address] = result
+    return result
 
 
 def run_command(command: list[str], timeout: int = 35) -> str:
@@ -216,6 +260,38 @@ def traceroute():
         return jsonify({"success": False, "error": "Traceroute exceeded its time limit."}), 504
     except RuntimeError as exc:
         return jsonify({"success": False, "error": str(exc)}), 502
+
+
+@app.post("/api/geolocate")
+def geolocate_hops():
+    """Enrich responding public traceroute hops with approximate IP locations."""
+    body = request.get_json(silent=True) or {}
+    addresses = body.get("ips")
+    if not isinstance(addresses, list) or not addresses:
+        return jsonify({"success": False, "error": "Provide a non-empty list of hop IP addresses."}), 400
+    if len(addresses) > 20:
+        return jsonify({"success": False, "error": "A maximum of 20 hop addresses can be enriched at once."}), 400
+
+    unique_addresses = []
+    for raw_address in addresses:
+        try:
+            address = ipaddress.ip_address(str(raw_address))
+        except ValueError:
+            return jsonify({"success": False, "error": "Every hop must be a valid public IP address."}), 400
+        if not address.is_global:
+            return jsonify({"success": False, "error": "Only public hop IP addresses can be geolocated."}), 400
+        canonical = str(address)
+        if canonical not in unique_addresses:
+            unique_addresses.append(canonical)
+
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        locations = list(executor.map(lookup_ip_location, unique_addresses))
+
+    return jsonify({
+        "success": True,
+        "locations": locations,
+        "note": "IP geolocation is approximate and may identify an ISP gateway or network hub rather than the physical router.",
+    })
 
 
 @app.errorhandler(404)
