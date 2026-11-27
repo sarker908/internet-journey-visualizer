@@ -97,7 +97,7 @@
   }
 
   function bindEvents() {
-    $$("[data-explore]").forEach(button => button.addEventListener("click", () => $("#explore").scrollIntoView({behavior:state.reducedMotion?"auto":"smooth"})));
+    $("[data-explore]").forEach(button => button.addEventListener("click", () => { showView("home-view"); $("#explore").scrollIntoView({behavior:state.reducedMotion?"auto":"smooth"}); }));
     $$("[data-home]").forEach(button => button.addEventListener("click", event => { event.preventDefault(); showView("home-view"); }));
     $$("[data-archive]").forEach(button => button.addEventListener("click", event => { event.preventDefault(); $("#archive").scrollIntoView({behavior:state.reducedMotion?"auto":"smooth"}); }));
     $("#filters").addEventListener("click",event => { const button=event.target.closest("[data-filter]"); if(!button)return; $$(".filter").forEach(item=>item.classList.toggle("active",item===button)); renderScenarios(button.dataset.filter); });
