@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: internet-journey-visualizer
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /api/health
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
